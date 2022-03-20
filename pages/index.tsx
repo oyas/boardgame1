@@ -1,15 +1,16 @@
-import * as React from 'react';
-import type { NextPage } from 'next';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import { Accordion, AccordionDetails, AccordionSummary, Button, CardActionArea, CardActions } from '@mui/material';
+import * as React from "react";
+import type { NextPage } from "next";
+import Container from "@mui/material/Container";
+import Typography from "@mui/material/Typography";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+} from "@mui/material";
 import axios from "axios";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Game, gameDefaultData } from '../src/game/game';
-import GameCard from '../src/components/GameCard';
-
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Game, gameDefaultData, GamePlayActionId } from "../src/game/Game";
+import GameMain from "../src/components/GameMain";
 
 const baseURL = "/api/game";
 
@@ -31,7 +32,7 @@ function useInterval(callback: TimerCallback, delay: number) {
       clearInterval(id);
     };
   }, [callback, delay]);
-};
+}
 
 const Home: NextPage = () => {
   const [game, setGame] = React.useState<Game>(gameDefaultData);
@@ -54,50 +55,31 @@ const Home: NextPage = () => {
 
   function action(action: string) {
     console.log("action", action);
+    axios.post(baseURL, { action, gameId: game.gameId }).then((response) => {
+      console.log("response of action " + action, response.data);
+      setGame(response.data);
+    });
+  }
+
+  function play(gameId: string, playerName: string) {
+    let actionId = GamePlayActionId;
+    console.log("action", actionId);
     axios
-      .post(baseURL, { action, gameId: game.gameId })
+      .post(baseURL, {
+        action: actionId,
+        gameId: gameId,
+        playerName: playerName,
+      })
       .then((response) => {
-        console.log("response of action " + action, response.data);
+        console.log("response of play game " + action, response.data);
         setGame(response.data);
       });
   }
 
   return (
     <Container maxWidth={false}>
-      <Box
-        sx={{
-          my: 4,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h4" component="h1" gutterBottom>
-          MUI v5 + Next.js with TypeScript example
-        </Typography>
-      </Box>
-      <Box>
-        <GameCard name={game.name} action={action}></GameCard>
-        <Button>button</Button>
-      </Box>
-      <Box>
-        <Grid container spacing={2}>
-          <Grid item xs={6} md={8}>
-            <GameCard name="c1" action={action}></GameCard>
-          </Grid>
-          <Grid item xs={6} md={4}>
-            <GameCard name="" action={action}></GameCard>
-          </Grid>
-          <Grid item xs={6} md={4}>
-            <GameCard name="" action={action}></GameCard>
-          </Grid>
-          <Grid item xs={6} md={8}>
-            <GameCard name="" action={action}></GameCard>
-          </Grid>
-        </Grid>
-      </Box>
-      <p>end</p>
+      <GameMain game={game} action={action} play={play}></GameMain>
+      <hr />
       <Accordion>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}

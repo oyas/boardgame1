@@ -1,28 +1,34 @@
 import { Card, CardActionArea, CardContent, Typography } from "@mui/material";
+import { ReactNode } from "react";
 
 type Props = {
-  name: string,
-  action: (action: string) => void,
+  materials?: string;
+  name: string;
+  secondary?: string;
+  action: () => void;
+  children?: ReactNode;
+  requirement?: string;
 };
 
 export default function GameCard(props: Props) {
   return (
     <Card variant="outlined">
-      <CardActionArea onClick={() => props.action(props.name)}>
+      <CardActionArea onClick={props.action}>
         <CardContent>
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {props.name}
+            {props.materials}
           </Typography>
           <Typography variant="h5" component="div">
-            benevolent
+            {props.name}
           </Typography>
           <Typography sx={{ mb: 1.5 }} color="text.secondary">
-            adjective
+            {props.secondary}
           </Typography>
           <Typography variant="body2">
-            well meaning and kindly.
-            <br />
-            {'"a benevolent smile"'}
+            {props.children}
+          </Typography>
+          <Typography>
+            {props.requirement}
           </Typography>
         </CardContent>
       </CardActionArea>
