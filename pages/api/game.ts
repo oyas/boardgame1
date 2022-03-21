@@ -24,25 +24,17 @@ let games = new Map<string, Game>([[gameDefaultData.gameId, gameDefaultData]]);
 
 let mountainQueue = new Map<string, MountainInfo[]>([[gameDefaultData.gameId, []]]);
 
-let mutex = 0;
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Game>
 ) {
-  console.log("req", req.url);
-  while (mutex != 0) {
-    console.log("mutex", mutex);
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-  mutex = 1;
   if (req.method === 'POST') {
+    console.log("post req", req.url);
     post(req, res);
+    console.log("post end", games);
   } else {
     get(req, res);
   }
-  mutex = 0;
-  console.log("req finished", req.url);
 };
 
 function post(
@@ -70,13 +62,13 @@ function post(
     game.name = gameReq.action;
     let player = game.players[gameReq.playerId];
     let failed = doAction(game, player, gameReq.action);
+    console.log("doAction finished", failed, game);
     if (game.information != "") {
       console.log("information", game.information);
     }
     if (failed) {
       console.log("action failed:", game.information);
       response(res, game, gameReq.playerId);
-      // res.status(400).end();
     } else {
       checkFinished(game);
       nextPlayer(game, false);
@@ -94,11 +86,13 @@ function get(
 ) {
   let gameId = req.query["gameId"];
   if (typeof gameId !== "string") {
+    console.log("gameId is not string");
     res.status(404).end();
     return;
   }
   let playerIdStr = req.query["playerId"];
   if (typeof playerIdStr !== "string" || playerIdStr == "") {
+    console.log("playerId is not set");
     res.status(404).end();
     return;
   }
@@ -109,6 +103,7 @@ function get(
     clearInformation(game);
     response(res, game, playerId);
   } else {
+    console.log("game or user not found.");
     res.status(404).end();
   }
 }
@@ -132,18 +127,17 @@ function gamePlay(req: ActionRequest): {game: Game | undefined, playerId: number
     return { game: undefined, playerId: -1 };
   }
   let game = games.get(req.gameId);
-  // console.log("search game:", game, games);
   if (game === undefined) {
     // new game
     console.log("Create new game:", req.gameId);
     game = newGame(req.gameId, "");
     games.set(game.gameId, game);
-    console.log(games);
   } else {
     // join game
     console.log("Join the game:", req.playerName);
   }
   let playerId = addPlayer(game, req.playerName);
+  console.log(games);
   return { game, playerId };
 }
 
@@ -166,6 +160,7 @@ function getRandomInt(max: number) {
 }
 
 function initTurn(game: Game) {
+  console.log("initTurn start");
   calcPower(game);
   resetUsedCount(game);
   if (game.phase.phase == 0) {
@@ -179,8 +174,8 @@ function initTurn(game: Game) {
 }
 
 function dice(game: Game) {
-  if (game.phase.phase != 0) {
-    return
+  if (game.phase.phase != 1) {
+    return;
   }
   let num = game.players.length;
   let order = [];
@@ -204,19 +199,18 @@ type CS = {
 
 function comp(a: CS, b: CS) {
   if (a.a > b.a) {
-      return 1;
-    }
-    if (a.a < b.a) {
-      return -1;
-    }
-    if (a.b > b.b) {
-      return 1;
-    }
-    if (a.b < b.b) {
-      return -1;
-    }
-    return 0;
-
+    return 1;
+  }
+  if (a.a < b.a) {
+    return -1;
+  }
+  if (a.b > b.b) {
+    return 1;
+  }
+  if (a.b < b.b) {
+    return -1;
+  }
+  return 0;
 }
 
 function nextMountains(game: Game) {
@@ -231,20 +225,22 @@ function nextMountains(game: Game) {
   }
   let num = game.players.length + 1;
   for (let i = 0; i < num; i++) {
-    let last = queue.pop();
-    if (last === undefined) {
-      shuffleMountains(game.gameId);
-      last = queue.pop();
+    if (queue.length == 0) {
+      queue = shuffleMountains(game.gameId);
     }
+    let last = queue.pop();
     if (last !== undefined) {
       last.index = i;
       last.count = 2;
       game.mountains.push(last);
+    } else {
+      console.log("ERROR!! mountain queue is empty");
     }
   }
 }
 
-function shuffleMountains(gameId: string) {
+function shuffleMountains(gameId: string): MountainInfo[] {
+  console.log("shuffleMountains: gameId=" + gameId);
   let order = [];
   let num = AllMountains.length;
   for (let i = 0; i < num; i++) {
@@ -253,11 +249,7 @@ function shuffleMountains(gameId: string) {
 
   order.sort(comp);
 
-  let queue = mountainQueue.get(gameId);
-  if (queue === undefined) {
-    queue = [];
-  }
-
+  let queue = [];
   for (let i = 0; i < num; i++) {
     let id = AllMountains[order[i].index];
     queue.push({
@@ -267,6 +259,7 @@ function shuffleMountains(gameId: string) {
     });
   }
   mountainQueue.set(gameId, queue);
+  return queue;
 }
 
 function checkFinished(game: Game) {
@@ -305,10 +298,12 @@ function nextPhase(game: Game) {
       game.phase.phase = 2;
       break;
     case 2:
-      initTurn(game);
       game.phase.phase = 1;
       game.phase.turn += 1;
       break;
+  }
+  if (game.phase.phase == 1) {
+    initTurn(game);
   }
 }
 
@@ -318,7 +313,9 @@ function calcPower(game: Game) {
   for (let player of game.players) {
     let power = 0;
     for (let plant of PowerPlants) {
-      power += count(player, plant.id) * plant.gen;
+      let cnt = count(player, plant.id);
+      let dam = Math.min(count(player, plant.dam), cnt) * 4;
+      power += cnt * plant.gen + dam;
     }
     player.power = power;
     player.remainingEnergy = power;
@@ -350,13 +347,14 @@ function clearInformation(game: Game) {
 }
 
 function nextPlayer(game: Game, first: boolean) {
+  console.log("nextPlayer");
   let curPlayer = game.players[Math.max(0, game.phase.playerId)];
   let order = curPlayer.order;
-  if (first || order >= game.players.length) {
+  if (first) {
     order = 0;
   }
-  while (order == -1 || curPlayer.finished == true) {
-    if (order >= game.players.length) {
+  for (let i = 0; i < game.players.length; i++) {
+    if (order >= game.players.length || order < 0) {
       order = 0;
     }
     order += 1;
@@ -365,6 +363,9 @@ function nextPlayer(game: Game, first: boolean) {
         curPlayer = player;
         break;
       }
+    }
+    if (!curPlayer.finished) {
+      break;
     }
   }
   game.phase.playerId = curPlayer.playerId;

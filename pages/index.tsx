@@ -7,7 +7,7 @@ import {
   AccordionDetails,
   AccordionSummary,
 } from "@mui/material";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Game, gameDefaultData, GamePlayActionId } from "../src/game/Game";
 import GameMain from "../src/components/GameMain";
@@ -37,23 +37,37 @@ function useInterval(callback: TimerCallback, delay: number) {
 const Home: NextPage = () => {
   const [game, setGame] = React.useState<Game>(gameDefaultData);
 
-  const syncGame = () => {
-    if (game.gameId == "") {
-      return;
-    }
-    axios
-      .get(baseURL + "?gameId=" + game.gameId + "&playerId=" + game.me)
-      .then((response) => {
+  const responseHandling = (ax: Promise<AxiosResponse<any, any>>, methodName: string) => {
+    ax.then((response) => {
+        console.log("response of " + methodName, response.data);
         setGame(response.data);
       })
       .catch((e) => {
-        console.log("syncGame failed:", e);
+        console.log(methodName + " failed:", e);
+        if (e.response) {
+          game.information = methodName + " failed: " + e.response.status + " " + e.response.data
+        } else {
+          game.information = methodName + " failed: " + e.message
+        }
+        setGame(game);
       })
       .finally(() => {
         if (game.information != "") {
           console.log("information:", game.information);
         }
       });
+  };
+
+  const syncGame = () => {
+    if (game.gameId == "") {
+      return;
+    }
+    responseHandling(
+      axios.get(baseURL + "?gameId=" + game.gameId + "&playerId=" + game.me, {
+        timeout: 1000,
+      }),
+      "game sync"
+    );
   };
 
   useInterval(() => {
@@ -68,39 +82,27 @@ const Home: NextPage = () => {
 
   function action(action: string) {
     console.log("action", action);
-    axios
-      .post(baseURL, { action, gameId: game.gameId, playerId: game.me })
-      .then((response) => {
-        console.log("response of action " + action, response.data);
-        setGame(response.data);
-      })
-      .catch((e) => {
-        console.log("action failed:", e);
-      })
-      .finally(() => {
-        if (game.information != "") {
-          console.log("information:", game.information);
-        }
-      });
+    responseHandling(
+      axios.post(
+        baseURL,
+        { action, gameId: game.gameId, playerId: game.me },
+        { timeout: 1000 }
+      ), "action"
+    );
   }
 
   function play(gameId: string, playerName: string) {
     let actionId = GamePlayActionId;
     console.log("action", actionId);
+    responseHandling(
     axios
       .post(baseURL, {
         action: actionId,
         gameId: gameId,
         playerName: playerName,
         playerId: -1,
-      })
-      .then((response) => {
-        console.log("response of play game " + actionId, response.data);
-        setGame(response.data);
-      })
-      .catch((e) => {
-        console.log("play failed:", e);
-      });
+      }, { timeout : 1000 }), "game play request"
+    );
   }
 
   return (

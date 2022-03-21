@@ -53,7 +53,7 @@ function mining(game: Game, player: PlayerInfo, index: number): boolean {
   }
 
   let used = player.usedMining;
-  if (count(player, MiningId) <= used) {
+  if (count(player, MiningId) <= used || (player.dice + 1) / 2 <= used) {
     game.information = "You can not do because of limit.";
     return true;
   }
@@ -188,6 +188,8 @@ function levelupper(game: Game, player: PlayerInfo, item: Item): boolean {
     }
   }
 
+  console.log("level upper valid");
+
   player.remainingEnergy -= required;
   for (let id of item.materialIds ?? []) {
     add(player, id, -1);
@@ -204,6 +206,9 @@ function requiredPower(used: number): number {
 }
 
 export function count(player: PlayerInfo, itemId: number): number {
+  if (itemId < 0) {
+    return 0;
+  }
   return player.items.get(itemId) ?? 0
 }
 

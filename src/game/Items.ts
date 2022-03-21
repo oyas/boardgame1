@@ -229,7 +229,7 @@ export const Items: Item[] = [
     type: "levelupper",
     name: "採掘機",
     description: "採掘機のレベル +1",
-    requirement: "次のレベルで使用する電力",
+    requirement: "lv2:電力5, lv3:電力15",
   },
   {
     id: SmeltingId,  // 91
@@ -238,7 +238,7 @@ export const Items: Item[] = [
     type: "levelupper",
     name: "精錬窯",
     description: "精錬窯のレベル +1",
-    requirement: "次のレベルで使用する電力",
+    requirement: "lv2:電力5, lv3:電力15",
   },
   {
     id: AssemblingId,  // 92
@@ -247,7 +247,7 @@ export const Items: Item[] = [
     type: "levelupper",
     name: "組立機",
     description: "組立機のレベル +1",
-    requirement: "次のレベルで使用する電力",
+    requirement: "lv2:電力5, lv3:電力15",
   },
 
   // power
@@ -298,9 +298,9 @@ export const ItemsFromId = new Map<number, Item>(
   Items.map((item) => [item.id, item])
 );
 
-export const PowerPlants: {id: number, gen: number}[] = [
-  {id: 100, gen: 2},
-  {id: 101, gen: 4},
-  {id: 102, gen: 15},
-  {id: 103, gen: 40},
+export const PowerPlants: {id: number, gen: number, dam: number}[] = [
+  {id: 100, gen: 2, dam: -1},
+  {id: 101, gen: 4, dam: 22},
+  {id: 102, gen: 15, dam: -1},
+  {id: 103, gen: 40, dam: -1},
 ];
