@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default function Players({ game, action }: Props) {
-  let makeRow = (id: string | number, name: string | undefined, value: string | number | undefined) => (
+  let makeRow = (id: string | number, name: any, value: any) => (
     <TableRow key={id}>
       <TableCell>{name}</TableCell>
       <TableCell align="right" width={70}>{value}</TableCell>
@@ -29,7 +29,8 @@ export default function Players({ game, action }: Props) {
   let builder = (player: PlayerInfo, id: number, usedCount: number) => {
     let name = "" + ItemsFromId.get(id)?.name;
     let count = new Map(player.items).get(id) ?? 0;
-    return makeRow(id, name, (count - usedCount) + " / " + count);
+    let level = <>Lv1⚡1{count > 1 ? <><br />Lv2⚡5</> : <></>}{count > 2 ? <><br />Lv3⚡15</> : <></>}</>;
+    return makeRow(id, <>{name}<br />{level}</>, (count - usedCount) + " / " + count);
   }
 
   let players = game.players.map((player) => (
