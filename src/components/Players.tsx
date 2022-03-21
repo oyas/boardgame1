@@ -27,8 +27,8 @@ export default function Players({ game, action }: Props) {
       );
 
   let builder = (player: PlayerInfo, id: number, usedCount: number) => {
-    let name = "" + ItemsFromId.get(MiningId)?.name;
-    let count = new Map(player.items).get(MiningId) ?? 0;
+    let name = "" + ItemsFromId.get(id)?.name;
+    let count = new Map(player.items).get(id) ?? 0;
     return makeRow(id, name, (count - usedCount) + " / " + count);
   }
 
