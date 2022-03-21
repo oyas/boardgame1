@@ -1,4 +1,4 @@
-import { Game, ItemCount, PlayerInfo } from "../game/Game";
+import { Game, PlayerInfo } from "../game/Game";
 import { AssemblingId, Item, ItemsFromActionId, MiningId, SmeltingId } from "../game/Items";
 
 const RequiredPower = [1, 4, 10, 99];
@@ -27,18 +27,12 @@ export function doAction(game: Game, player: PlayerInfo, actionId: string): bool
   }
 
   switch (item.type) {
-    case 'mining':
-      // return mining(game, player, item);
-      break;
     case 'smelting':
       return smelting(game, player, item);
-      break;
     case 'assembling':
       return assembling(game, player, item);
-      break;
     case 'levelupper':
       return levelupper(game, player, item);
-      break;
     default:
       console.log("ERROR!!!! action type is wrong.", item);
   }
@@ -52,14 +46,19 @@ function mining(game: Game, player: PlayerInfo, index: number): boolean {
     return true;
   }
 
+  // order by dice
+  if (game.phase.playerId != player.playerId) {
+    game.information = "You can not do because of ordering.";
+    return true;
+  }
+
   let used = player.usedMining;
-  let machine = findItem(player, MiningId);
-  if (machine.count <= used) {
+  if (count(player, MiningId) <= used) {
     game.information = "You can not do because of limit.";
     return true;
   }
   let required = requiredPower(used);
-  if (required < 0 || player.remainingEnergy < required) {
+  if (player.remainingEnergy < required) {
     game.information = "You can not do because of power.";
     return true;
   }
@@ -76,8 +75,7 @@ function mining(game: Game, player: PlayerInfo, index: number): boolean {
   player.usedMining += 1;
   player.remainingEnergy -= required;
   mountain.count -= 1;
-  let item = findItem(player, mountain.mountainId - 200);
-  item.count += 1;
+  add(player, mountain.mountainId - 200, +1);
   return false;
 }
 
@@ -89,13 +87,12 @@ function smelting(game: Game, player: PlayerInfo, item: Item): boolean {
   }
 
   let used = player.usedSmelting;
-  let machine = findItem(player, SmeltingId);
-  if (machine.count <= used) {
+  if (count(player, SmeltingId) <= used) {
     game.information = "You can not do because of limit.";
     return true;
   }
   let required = requiredPower(used);
-  if (required < 0 || player.remainingEnergy < required) {
+  if (player.remainingEnergy < required) {
     game.information = "You can not do because of power.";
     return true;
   }
@@ -106,8 +103,7 @@ function smelting(game: Game, player: PlayerInfo, item: Item): boolean {
     materialReq.set(id, count + 1);
   }
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    if (myItem.count < (materialReq.get(id) ?? 10000)) {
+    if (count(player, id) < (materialReq.get(id) ?? 10000)) {
       game.information = "You can not do because of materials.";
       return true;
     }
@@ -118,11 +114,9 @@ function smelting(game: Game, player: PlayerInfo, item: Item): boolean {
   player.usedSmelting += 1;
   player.remainingEnergy -= required;
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    myItem.count -= 1;
+    add(player, id, -1);
   }
-  let myItem = findItem(player, item.id);
-  myItem.count += 1;
+  add(player, item.id, +1);
   return false;
 }
 
@@ -134,13 +128,12 @@ function assembling(game: Game, player: PlayerInfo, item: Item): boolean {
   }
 
   let used = player.usedAssembling;
-  let machine = findItem(player, AssemblingId);
-  if (machine.count <= used) {
+  if (count(player, AssemblingId) <= used) {
     game.information = "You can not do because of limit.";
     return true;
   }
   let required = requiredPower(used);
-  if (required < 0 || player.remainingEnergy < required) {
+  if (player.remainingEnergy < required) {
     game.information = "You can not do because of power.";
     return true;
   }
@@ -151,8 +144,7 @@ function assembling(game: Game, player: PlayerInfo, item: Item): boolean {
     materialReq.set(id, count + 1);
   }
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    if (myItem.count < (materialReq.get(id) ?? 10000)) {
+    if (count(player, id) < (materialReq.get(id) ?? 10000)) {
       game.information = "You can not do because of materials.";
       return true;
     }
@@ -163,11 +155,9 @@ function assembling(game: Game, player: PlayerInfo, item: Item): boolean {
   player.usedAssembling += 1;
   player.remainingEnergy -= required;
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    myItem.count -= 1;
+    add(player, id, -1);
   }
-  let myItem = findItem(player, item.id);
-  myItem.count += 1;
+  add(player, item.id, +1);
   return false;
 }
 
@@ -177,9 +167,8 @@ function levelupper(game: Game, player: PlayerInfo, item: Item): boolean {
     return true;
   }
 
-  let myItem = findItem(player, item.id);
   let required = 0;
-  for (let i = 0; i <= myItem.count; i++) {
+  for (let i = 0; i <= count(player, item.id); i++) {
     required += RequiredPower[i];
   }
   if (required < 0 || player.remainingEnergy < required) {
@@ -193,8 +182,7 @@ function levelupper(game: Game, player: PlayerInfo, item: Item): boolean {
     materialReq.set(id, count + 1);
   }
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    if (myItem.count < (materialReq.get(id) ?? 10000)) {
+    if (count(player, id) < (materialReq.get(id) ?? 10000)) {
       game.information = "You can not do because of materials.";
       return true;
     }
@@ -202,34 +190,26 @@ function levelupper(game: Game, player: PlayerInfo, item: Item): boolean {
 
   player.remainingEnergy -= required;
   for (let id of item.materialIds ?? []) {
-    let myItem = findItem(player, id);
-    myItem.count -= 1;
+    add(player, id, -1);
   }
-  myItem.count += 1;
+  add(player, item.id, +1);
   return false;
 }
 
 function requiredPower(used: number): number {
   if (used > 3) {
-    return -1;
+    return 1000000;
   }
   return RequiredPower[used];
 }
 
-export function findItem(player: PlayerInfo, itemId: number): ItemCount {
-  for (let ic of player.items) {
-    if (ic.id == itemId) {
-      return ic;
-    }
-  }
+export function count(player: PlayerInfo, itemId: number): number {
+  return player.items.get(itemId) ?? 0
+}
 
-  // new item
-  let item = {
-    id: itemId,
-    count: 0,
-  };
-  player.items.push(item);
-  return item;
+export function add(player: PlayerInfo, itemId: number, num: number) {
+  let cur = count(player, itemId);
+  player.items.set(itemId, cur + num);
 }
 
 function finished(game: Game, player: PlayerInfo): boolean {

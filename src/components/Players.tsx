@@ -1,5 +1,5 @@
 import { Box, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { Game, ItemCount, PlayerInfo } from "../game/Game";
+import { Game, PlayerInfo } from "../game/Game";
 import { ItemsFromId } from "../game/Items";
 
 type Props = {
@@ -9,17 +9,17 @@ type Props = {
 
 export default function Players({ game, action }: Props) {
   let itemRows = (player: PlayerInfo) =>
-    player.items.map((row) => (
-      <TableRow key={row.id}>
-        <TableCell>{ItemsFromId.get(row.id)?.name}</TableCell>
+    Array.from(player.items).map(([id, count]) => (
+      <TableRow key={id}>
+        <TableCell>{ItemsFromId.get(id)?.name}</TableCell>
         <TableCell align="right">
-          {(row.id == 90
-            ? (row.count - player.usedMining) + " / "
-            : row.id == 91
-            ? (row.count - player.usedSmelting) + " / "
-            : row.id == 92
-            ? (row.count - player.usedAssembling) + " / "
-            : "") + row.count}
+          {(id == 90
+            ? (count - player.usedMining) + " / "
+            : id == 91
+            ? (count - player.usedSmelting) + " / "
+            : id == 92
+            ? (count - player.usedAssembling) + " / "
+            : "") + count}
         </TableCell>
       </TableRow>
     ));

@@ -16,7 +16,7 @@ export type PlayerInfo = {
   dice: number;
   order: number;
   power: number;
-  items: ItemCount[];
+  items: Map<number, number>;
   remainingEnergy: number;
   finished: boolean;
   usedMining: number;
@@ -24,10 +24,10 @@ export type PlayerInfo = {
   usedAssembling: number;
 };
 
-export type ItemCount = {
-  id: number;
-  count: number;
-};
+// export type ItemCount = {
+//   id: number;
+//   count: number;
+// };
 
 export type MountainInfo = {
   index: number;
@@ -70,24 +70,12 @@ export function newPlayerInfo(playerId: number, name: string): PlayerInfo {
     dice: 0,
     order: 0,
     power: 0,
-    items: [
-      {
-        id: 90,
-        count: 1,
-      },
-      {
-        id: 91,
-        count: 1,
-      },
-      {
-        id: 92,
-        count: 1,
-      },
-      {
-        id: 100,
-        count: 1,
-      },
-    ],
+    items: new Map([
+      [90, 1],
+      [91, 1],
+      [92, 1],
+      [100, 1],
+    ]),
     remainingEnergy: 0,
     finished: false,
     usedMining: 0,
@@ -108,12 +96,7 @@ export const gameDefaultData: Game = {
       dice: 0,
       order: 0,
       power: 0,
-      items: [
-        {
-          id: 0,
-          count: 2,
-        },
-      ],
+      items: new Map([[0, 2]]),
       remainingEnergy: 0,
       finished: false,
       usedMining: 0,

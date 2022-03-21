@@ -1,8 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Game, gameDefaultData, GamePlayActionId, MountainInfo, newGame, newPlayerInfo } from '../../src/game/Game';
-import { PowerPlants } from '../../src/game/Items';
-import { doAction, findItem } from '../../src/server/action';
+import { AssemblingId, MiningId, PowerPlants, SmeltingId } from '../../src/game/Items';
+import { count, doAction } from '../../src/server/action';
 
 
 const AllMountains = [
@@ -79,6 +79,7 @@ function post(
       // res.status(400).end();
     } else {
       checkFinished(game);
+      nextPlayer(game, false);
       response(res, game, gameReq.playerId);
     }
   } else {
@@ -115,6 +116,9 @@ function get(
 function response(res: NextApiResponse<Game>, game: Game, me: number) {
   let ret = JSON.parse(JSON.stringify(game));
   ret.me = me;
+  for (let i = 0; i < game.players.length; i++) {
+    ret.players[i].items = [...game.players[i].items]; // JSON.stringfy does not work for Map
+  }
   res.status(200).json(ret);
 }
 
@@ -163,12 +167,14 @@ function getRandomInt(max: number) {
 
 function initTurn(game: Game) {
   calcPower(game);
+  resetUsedCount(game);
   if (game.phase.phase == 0) {
     // reset
     mountainQueue.set(game.gameId, []);
   }
   nextMountains(game);
   dice(game);
+  nextPlayer(game, true);
   console.log("initTurn:", game);
 }
 
@@ -264,6 +270,20 @@ function shuffleMountains(gameId: string) {
 }
 
 function checkFinished(game: Game) {
+  for (let player of game.players) {
+    if (game.phase.phase == 1 && player.usedMining == count(player, MiningId)) {
+      player.finished = true;
+    }
+    if (
+      game.phase.phase == 2 &&
+      ((player.usedSmelting == count(player, SmeltingId) &&
+        player.usedAssembling == count(player, AssemblingId) &&
+        player.remainingEnergy < 5) ||
+        player.remainingEnergy == 0)
+    ) {
+      player.finished = true;
+    }
+  }
   let finished = true;
   for (let player of game.players) {
     finished &&= player.finished;
@@ -276,9 +296,6 @@ function checkFinished(game: Game) {
 function nextPhase(game: Game) {
   for (let player of game.players) {
     player.finished = false;
-    player.usedMining = 0;
-    player.usedSmelting = 0;
-    player.usedAssembling = 0;
   }
   switch (game.phase.phase) {
     case 0:
@@ -301,8 +318,7 @@ function calcPower(game: Game) {
   for (let player of game.players) {
     let power = 0;
     for (let plant of PowerPlants) {
-      let myItem = findItem(player, plant.id);
-      power += myItem.count * plant.gen;
+      power += count(player, plant.id) * plant.gen;
     }
     player.power = power;
     player.remainingEnergy = power;
@@ -317,10 +333,39 @@ function calcPower(game: Game) {
   }
 }
 
+function resetUsedCount(game: Game) {
+  for (let player of game.players) {
+    player.usedMining = 0;
+    player.usedSmelting = 0;
+    player.usedAssembling = 0;
+  }
+}
+
 function clearInformation(game: Game) {
   if (game.winner >= 0) {
     game.information = game.players[game.winner].name + "の勝利!!";
   } else {
     game.information = "";
   }
+}
+
+function nextPlayer(game: Game, first: boolean) {
+  let curPlayer = game.players[Math.max(0, game.phase.playerId)];
+  let order = curPlayer.order;
+  if (first || order >= game.players.length) {
+    order = 0;
+  }
+  while (order == -1 || curPlayer.finished == true) {
+    if (order >= game.players.length) {
+      order = 0;
+    }
+    order += 1;
+    for (let player of game.players) {
+      if (player.order == order) {
+        curPlayer = player;
+        break;
+      }
+    }
+  }
+  game.phase.playerId = curPlayer.playerId;
 }
