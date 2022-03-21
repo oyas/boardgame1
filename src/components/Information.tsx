@@ -20,7 +20,7 @@ export default function Information({game, action}: Props) {
         <Typography sx={{ fontSize: 24 }}>{game.information}</Typography>
       </Box>
       <Box width="100%">
-        <Typography sx={{ fontSize: 24 }}>{phaseMessage[game.phase.phase]}</Typography>
+        <Typography sx={{ fontSize: 24 }}>{"Turn." + game.phase.turn + "  " + phaseMessage[game.phase.phase]}</Typography>
       </Box>
       <Box width="150px">
         <GameCard name={game.phase.phase == 0 ? "Ready" : "Finish"} action={() => action("skip")}></GameCard>
