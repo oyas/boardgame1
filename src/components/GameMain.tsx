@@ -1,4 +1,4 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import { Game } from "../game/Game";
 import Information from "./Information";
 import Mountains from "./MountainsField";
@@ -58,18 +58,28 @@ export default function GameMain({ game, action, play }: Props) {
         {playForm}
       </Box>
       <Box sx={{ display: game.gameId == "" ? "none" : "block" }}>
-        <Box margin="5px">
-          <Information game={game} action={action}></Information>
-        </Box>
-        <Box margin="5px">
-          <Mountains game={game} action={action}></Mountains>
-        </Box>
-        <Box margin="5px">
-          <Players game={game} action={action}></Players>
-        </Box>
-        <Box margin="5px">
-          <Products game={game} action={action}></Products>
-        </Box>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Box margin="5px">
+              <Information game={game} action={action}></Information>
+            </Box>
+          </Grid>
+          <Grid item xs={12}>
+            <Box margin="5px">
+              <Mountains game={game} action={action}></Mountains>
+            </Box>
+          </Grid>
+          <Grid item xs={12} xl={6}>
+            <Box margin="5px">
+              <Players game={game} action={action}></Players>
+            </Box>
+          </Grid>
+          <Grid item xs={12} xl={6}>
+            <Box margin="5px">
+              <Products game={game} action={action}></Products>
+            </Box>
+          </Grid>
+        </Grid>
       </Box>
     </>
   );

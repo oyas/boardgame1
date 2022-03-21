@@ -23,7 +23,7 @@ export default function Products({game, action}: Props) {
           }
         }
         return (
-          <Grid item xs={4} md={2} key={item.id}>
+          <Grid item xs={4} md={2} xl={3} key={item.id}>
             <GameCard
               materials={materials}
               name={item.name}
