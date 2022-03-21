@@ -38,9 +38,22 @@ const Home: NextPage = () => {
   const [game, setGame] = React.useState<Game>(gameDefaultData);
 
   const syncGame = () => {
-    axios.get(baseURL + "?gameId=" + game.gameId).then((response) => {
-      setGame(response.data);
-    });
+    if (game.gameId == "") {
+      return;
+    }
+    axios
+      .get(baseURL + "?gameId=" + game.gameId + "&playerId=" + game.me)
+      .then((response) => {
+        setGame(response.data);
+      })
+      .catch((e) => {
+        console.log("syncGame failed:", e);
+      })
+      .finally(() => {
+        if (game.information != "") {
+          console.log("information:", game.information);
+        }
+      });
   };
 
   useInterval(() => {
@@ -55,10 +68,20 @@ const Home: NextPage = () => {
 
   function action(action: string) {
     console.log("action", action);
-    axios.post(baseURL, { action, gameId: game.gameId }).then((response) => {
-      console.log("response of action " + action, response.data);
-      setGame(response.data);
-    });
+    axios
+      .post(baseURL, { action, gameId: game.gameId, playerId: game.me })
+      .then((response) => {
+        console.log("response of action " + action, response.data);
+        setGame(response.data);
+      })
+      .catch((e) => {
+        console.log("action failed:", e);
+      })
+      .finally(() => {
+        if (game.information != "") {
+          console.log("information:", game.information);
+        }
+      });
   }
 
   function play(gameId: string, playerName: string) {
@@ -69,10 +92,14 @@ const Home: NextPage = () => {
         action: actionId,
         gameId: gameId,
         playerName: playerName,
+        playerId: -1,
       })
       .then((response) => {
-        console.log("response of play game " + action, response.data);
+        console.log("response of play game " + actionId, response.data);
         setGame(response.data);
+      })
+      .catch((e) => {
+        console.log("play failed:", e);
       });
   }
 

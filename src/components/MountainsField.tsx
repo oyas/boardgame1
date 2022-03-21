@@ -15,8 +15,8 @@ export default function MountainsField({game, action}: Props) {
       {game.mountains.map((mountain) => {
         let m = Mountains.filter((m) => m.id == mountain.mountainId)[0];
         return (
-          <Grid item xs={4} md={2} key={mountain.index}>
-            <GameCard name={m.name} action={() => action(m.actionId)} secondary={"残り " + mountain.count}>
+          <Grid item xs={4} md={2} key={"m" + game.phase.turn + "t" + mountain.index}>
+            <GameCard name={m.name} action={() => action("mountain" + mountain.index)} secondary={"残り " + mountain.count}>
               {m.description}
             </GameCard>
           </Grid>

@@ -11,7 +11,7 @@ type Props = {
   play: (gameId: string, playerName: string) => void;
 };
 
-export default function GameMain({game, action, play}: Props) {
+export default function GameMain({ game, action, play }: Props) {
   const playForm = (
     <>
       <TextField id="game-id" label="Game ID" variant="outlined" />
