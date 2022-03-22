@@ -8,6 +8,12 @@ const phaseMessage = [
   "精錬や組み立てを実行できます。",
 ];
 
+const specialMessage = [
+  "",
+  "さんは、資源をあと2つ採掘できます。 (マ術②の効果)",
+  "さんは、資源をあと1つ採掘できます。 (マ術②の効果)",
+];
+
 type Props = {
   game: Game;
   action: (action: string) => void;
@@ -15,7 +21,11 @@ type Props = {
 
 export default function Information({game, action}: Props) {
   let curPlayer = game.players[game.phase.playerId];
-  let curPlayerName = game.phase.phase == 1 ? curPlayer?.name : ""
+  let curPlayerName = game.phase.phase == 1 ? curPlayer?.name : "";
+  let message = curPlayerName + phaseMessage[game.phase.phase];
+  if (game.phase.special != 0) {
+    message = curPlayer?.name + specialMessage[game.phase.special];
+  }
   return (
     <Box>
       <Box style={{ background: "#e5a729" }} width="100%">
@@ -23,7 +33,7 @@ export default function Information({game, action}: Props) {
       </Box>
       <Box width="100%">
         <Typography sx={{ fontSize: 24 }}>
-          {"Turn." + game.phase.turn + "  " + curPlayerName + phaseMessage[game.phase.phase]}
+          {"Turn." + game.phase.turn + ":  " + message}
         </Typography>
       </Box>
       <Box width="150px">

@@ -221,6 +221,26 @@ export const Items: Item[] = [
     requirement: "組立機",
   },
 
+  // special
+  {
+    id: 80,
+    actionId: "special80",
+    materialIds: [4],
+    type: "assembling",
+    name: "マ術①",
+    description: "ランダムな資源2つを得る",
+    requirement: "組立機",
+  },
+  {
+    id: 81,
+    actionId: "special81",
+    materialIds: [3, 3, 3],
+    type: "assembling",
+    name: "マ術②",
+    description: "サイコロを振って次を得る。 1:マ石①, 2:マ石②, 3:マ石③, 4~6:すきな資源2つ",
+    requirement: "組立機",
+  },
+
   // builder
   {
     id: MiningId,  // 90

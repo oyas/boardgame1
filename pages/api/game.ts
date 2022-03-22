@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { Game, gameDefaultData, GamePlayActionId, MountainInfo, newGame, newPlayerInfo } from '../../src/game/Game';
 import { AssemblingId, MiningId, PowerPlants, SmeltingId } from '../../src/game/Items';
 import { count, doAction } from '../../src/server/action';
+import { comp, getRandomInt } from '../../src/server/util';
 
 
 const AllMountains = [
@@ -70,8 +71,12 @@ function post(
       console.log("action failed:", game.information);
       response(res, game, gameReq.playerId);
     } else {
-      checkFinished(game);
-      nextPlayer(game, false);
+      if (game.phase.phase == 1) {
+        nextPlayer(game);
+      }
+      if (game.phase.special == 0) {
+        checkFinished(game);
+      }
       response(res, game, gameReq.playerId);
     }
   } else {
@@ -155,10 +160,6 @@ function addPlayer(game: Game, playerName: string): number {
   return player.playerId;
 }
 
-function getRandomInt(max: number) {
-  return Math.floor(Math.random() * max);
-}
-
 function initTurn(game: Game) {
   console.log("initTurn start");
   calcPower(game);
@@ -169,7 +170,7 @@ function initTurn(game: Game) {
   }
   nextMountains(game);
   dice(game);
-  nextPlayer(game, true);
+  nextPlayer(game);
   console.log("initTurn:", game);
 }
 
@@ -188,29 +189,7 @@ function dice(game: Game) {
   for (let i = 0; i < num; i++) {
     game.players[order[i].index].order = i + 1;
   }
-  game.phase.playerId = order[0].index;
-}
-
-type CS = {
-  a: number;
-  b: number;
-  index: number;
-};
-
-function comp(a: CS, b: CS) {
-  if (a.a > b.a) {
-    return 1;
-  }
-  if (a.a < b.a) {
-    return -1;
-  }
-  if (a.b > b.b) {
-    return 1;
-  }
-  if (a.b < b.b) {
-    return -1;
-  }
-  return 0;
+  game.phase.playerId = -1;
 }
 
 function nextMountains(game: Game) {
@@ -346,11 +325,11 @@ function clearInformation(game: Game) {
   }
 }
 
-function nextPlayer(game: Game, first: boolean) {
+function nextPlayer(game: Game) {
   console.log("nextPlayer");
   let curPlayer = game.players[Math.max(0, game.phase.playerId)];
   let order = curPlayer.order;
-  if (first) {
+  if (game.phase.playerId < 0) {
     order = 0;
   }
   for (let i = 0; i < game.players.length; i++) {
