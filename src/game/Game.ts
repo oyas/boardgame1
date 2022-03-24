@@ -8,6 +8,7 @@ export type Game = {
   winner: number;
   mountains: MountainInfo[];
   phase: PhaseInfo;
+  time: string;
 };
 
 export type PlayerInfo = {
@@ -23,11 +24,6 @@ export type PlayerInfo = {
   usedSmelting: number;
   usedAssembling: number;
 };
-
-// export type ItemCount = {
-//   id: number;
-//   count: number;
-// };
 
 export type MountainInfo = {
   index: number;
@@ -60,6 +56,7 @@ export function newGame(gameId: string, roomId: string): Game {
       playerId: 0,
       special: 0,
     },
+    time: new Date().toISOString(),
   };
 };
 
@@ -139,4 +136,5 @@ export const gameDefaultData: Game = {
     playerId: 0,
     special: 0,
   },
+  time: "",
 };

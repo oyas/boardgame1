@@ -75,11 +75,6 @@ const Home: NextPage = () => {
     syncGame();
   }, 2000);
 
-  React.useEffect(() => {
-    console.log("useEffect");
-    syncGame();
-  }, []);
-
   function action(action: string) {
     console.log("action", action);
     responseHandling(
